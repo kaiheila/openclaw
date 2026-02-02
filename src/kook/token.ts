@@ -20,9 +20,13 @@ export type KookTokenResolution = {
  * Normalize KOOK token (trim whitespace)
  */
 export function normalizeKookToken(raw?: string | null): string | undefined {
-  if (!raw) return undefined;
+  if (!raw) {
+    return undefined;
+  }
   const trimmed = raw.trim();
-  if (!trimmed) return undefined;
+  if (!trimmed) {
+    return undefined;
+  }
   return trimmed;
 }
 

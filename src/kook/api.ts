@@ -548,7 +548,30 @@ export async function getKookMessageList(params: {
     ...(params.pageSize && { page_size: params.pageSize.toString() }),
   });
 
-  const data = await fetchKook<{ items: any[] }>(`/message/list?${query.toString()}`, params.token);
+  const data = await fetchKook<{
+    items: Array<{
+      id: string;
+      type: number;
+      content: string;
+      mention?: string[];
+      mention_all?: boolean;
+      mention_roles?: number[];
+      mention_here?: boolean;
+      embeds?: unknown[];
+      attachments?: KookMessage["attachments"];
+      reactions?: KookMessage["reactions"];
+      quote?: {
+        id: string;
+        type: number;
+        content: string;
+        create_at: number;
+        author: KookUser;
+      };
+      create_at: number;
+      updated_at: number;
+      author: KookUser;
+    }>;
+  }>(`/message/list?${query.toString()}`, params.token);
 
   return data.items.map((msg) => ({
     id: msg.id,
@@ -583,7 +606,29 @@ export async function getKookMessage(params: {
   token: string;
   msgId: string;
 }): Promise<KookMessage & { channelId: string }> {
-  const data = await fetchKook<any>(`/message/view?msg_id=${params.msgId}`, params.token);
+  const data = await fetchKook<{
+    id: string;
+    type: number;
+    content: string;
+    mention?: string[];
+    mention_all?: boolean;
+    mention_roles?: number[];
+    mention_here?: boolean;
+    embeds?: unknown[];
+    attachments?: KookMessage["attachments"];
+    reactions?: KookMessage["reactions"];
+    quote?: {
+      id: string;
+      type: number;
+      content: string;
+      create_at: number;
+      author: KookUser;
+    };
+    create_at: number;
+    updated_at: number;
+    author: KookUser;
+    channel_id: string;
+  }>(`/message/view?msg_id=${params.msgId}`, params.token);
 
   return {
     id: data.id,
@@ -596,7 +641,15 @@ export async function getKookMessage(params: {
     embeds: data.embeds || [],
     attachments: data.attachments,
     reactions: data.reactions,
-    quote: data.quote,
+    quote: data.quote
+      ? {
+          id: data.quote.id,
+          type: data.quote.type,
+          content: data.quote.content,
+          createAt: data.quote.create_at,
+          author: data.quote.author,
+        }
+      : undefined,
     createAt: data.create_at,
     updatedAt: data.updated_at,
     author: data.author,
@@ -681,14 +734,14 @@ export async function getKookReactionList(params: {
   msgId: string;
   emoji: string;
 }): Promise<(KookUser & { reactionTime: number })[]> {
-  const data = await fetchKook<any[]>(
+  const data = await fetchKook<Array<KookUser & { reaction_time?: number }>>(
     `/message/reaction-list?msg_id=${params.msgId}&emoji=${encodeURIComponent(params.emoji)}`,
     params.token,
   );
 
   return data.map((user) => ({
     ...user,
-    reactionTime: user.reaction_time,
+    reactionTime: user.reaction_time ?? 0,
   }));
 }
 
@@ -720,7 +773,21 @@ export async function getKookGuildUsers(params: {
   });
 
   const data = await fetchKook<{
-    items: any[];
+    items: Array<{
+      id: string;
+      username: string;
+      nickname?: string;
+      identify_num: string;
+      online: boolean;
+      bot: boolean;
+      status: number;
+      avatar: string;
+      vip_avatar?: string;
+      mobile_verified: boolean;
+      roles?: number[];
+      joined_at?: number;
+      active_time?: number;
+    }>;
     meta: {
       page: number;
       page_total: number;
@@ -832,7 +899,21 @@ export async function getKookChannelList(params: {
   });
 
   const data = await fetchKook<{
-    items: any[];
+    items: Array<{
+      id: string;
+      name: string;
+      user_id: string;
+      guild_id?: string;
+      topic: string;
+      is_category: boolean;
+      parent_id: string;
+      level: number;
+      slow_mode: number;
+      type: number;
+      permission_overwrites?: unknown[];
+      permission_users?: unknown[];
+      permission_sync: number;
+    }>;
     meta: {
       page: number;
       page_total: number;
@@ -878,7 +959,21 @@ export async function createKookChannel(params: {
   limitAmount?: number;
   voiceQuality?: 1 | 2 | 3;
 }): Promise<KookChannel> {
-  const data = await fetchKook<any>("/channel/create", params.token, {
+  const data = await fetchKook<{
+    id: string;
+    name: string;
+    user_id: string;
+    guild_id: string;
+    topic: string;
+    is_category: boolean;
+    parent_id: string;
+    level: number;
+    slow_mode: number;
+    type: number;
+    permission_overwrites?: unknown[];
+    permission_users?: unknown[];
+    permission_sync: number;
+  }>("/channel/create", params.token, {
     method: "POST",
     body: JSON.stringify({
       guild_id: params.guildId,
@@ -920,7 +1015,21 @@ export async function updateKookChannel(params: {
   slowMode?: number;
   voiceQuality?: 1 | 2 | 3;
 }): Promise<KookChannel> {
-  const data = await fetchKook<any>("/channel/update", params.token, {
+  const data = await fetchKook<{
+    id: string;
+    name: string;
+    user_id: string;
+    guild_id: string;
+    topic: string;
+    is_category: boolean;
+    parent_id: string;
+    level: number;
+    slow_mode: number;
+    type: number;
+    permission_overwrites?: unknown[];
+    permission_users?: unknown[];
+    permission_sync: number;
+  }>("/channel/update", params.token, {
     method: "POST",
     body: JSON.stringify({
       channel_id: params.channelId,
@@ -1196,7 +1305,21 @@ export async function getKookEmojiList(params: {
     items: Array<{
       id: string;
       name: string;
-      user_info: any;
+      user_info: {
+        id: string;
+        username: string;
+        nickname?: string;
+        identify_num: string;
+        online: boolean;
+        bot: boolean;
+        status: number;
+        avatar: string;
+        vip_avatar?: string;
+        mobile_verified: boolean;
+        roles?: number[];
+        joined_at?: number;
+        active_time?: number;
+      };
     }>;
     meta: {
       page: number;
@@ -1247,7 +1370,21 @@ export async function createKookEmoji(params: {
   const data = await fetchKook<{
     id: string;
     name: string;
-    user_info: any;
+    user_info: {
+      id: string;
+      username: string;
+      nickname?: string;
+      identify_num: string;
+      online: boolean;
+      bot: boolean;
+      status: number;
+      avatar: string;
+      vip_avatar?: string;
+      mobile_verified: boolean;
+      roles?: number[];
+      joined_at?: number;
+      active_time?: number;
+    };
   }>("/guild-emoji/create", params.token, {
     method: "POST",
     body: JSON.stringify({
@@ -1291,7 +1428,21 @@ export async function updateKookEmoji(params: {
   const data = await fetchKook<{
     id: string;
     name: string;
-    user_info: any;
+    user_info: {
+      id: string;
+      username: string;
+      nickname?: string;
+      identify_num: string;
+      online: boolean;
+      bot: boolean;
+      status: number;
+      avatar: string;
+      vip_avatar?: string;
+      mobile_verified: boolean;
+      roles?: number[];
+      joined_at?: number;
+      active_time?: number;
+    };
   }>("/guild-emoji/update", params.token, {
     method: "POST",
     body: JSON.stringify({

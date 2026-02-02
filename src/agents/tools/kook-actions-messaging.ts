@@ -1,5 +1,5 @@
-import type {AgentToolResult} from "@mariozechner/pi-agent-core";
-import type {KookActionConfig} from "../../config/config.js";
+import type { AgentToolResult } from "@mariozechner/pi-agent-core";
+import type { KookActionConfig } from "../../config/config.js";
 import {
   addKookReaction,
   deleteKookMessage,
@@ -10,16 +10,17 @@ import {
   sendKookMessage,
   updateKookMessage,
 } from "../../kook/api.js";
-import {type ActionGate, jsonResult, readNumberParam, readStringParam,} from "./common.js";
-import {withNormalizedTimestamp} from "../date-time.js";
+import { withNormalizedTimestamp } from "../date-time.js";
+import { type ActionGate, jsonResult, readNumberParam, readStringParam } from "./common.js";
 
 export async function handleKookMessagingAction(
   action: string,
   params: Record<string, unknown>,
   isActionEnabled: ActionGate<KookActionConfig>,
 ): Promise<AgentToolResult<unknown>> {
-  const accountId = readStringParam(params, "accountId");
+  const _accountId = readStringParam(params, "accountId");
   // Note: Token resolution is handled in the main handler
+  void _accountId;
 
   switch (action) {
     case "sendMessage": {
@@ -38,7 +39,8 @@ export async function handleKookMessagingAction(
         throw new Error("Invalid target format. Expected 'channel:<id>' or 'user:<id>'");
       }
 
-      const [, targetType, targetId] = targetMatch;
+      const [, _targetType, targetId] = targetMatch;
+      void _targetType;
 
       const result = await sendKookMessage({
         token: params.token as string,
@@ -71,7 +73,7 @@ export async function handleKookMessagingAction(
         targetId: channelId,
         msgId,
         flag: (flag as "before" | "around" | "after") || undefined,
-        pageSize: limit ?? 20,
+        pageSize: limit,
       });
 
       return jsonResult({
@@ -103,10 +105,11 @@ export async function handleKookMessagingAction(
       if (!isActionEnabled("messages")) {
         throw new Error("KOOK message editing is disabled.");
       }
-      const channelId = readStringParam(params, "channelId", { required: true });
+      const _channelId = readStringParam(params, "channelId", { required: true });
       const msgId = readStringParam(params, "messageId", { required: true });
       const content = readStringParam(params, "content", { required: true });
       const quote = readStringParam(params, "quote");
+      void _channelId;
 
       await updateKookMessage({
         token: params.token as string,
@@ -122,8 +125,9 @@ export async function handleKookMessagingAction(
       if (!isActionEnabled("messages")) {
         throw new Error("KOOK message deletion is disabled.");
       }
-      const channelId = readStringParam(params, "channelId", { required: true });
+      const _channelId = readStringParam(params, "channelId", { required: true });
       const msgId = readStringParam(params, "messageId", { required: true });
+      void _channelId;
 
       await deleteKookMessage({
         token: params.token as string,
@@ -137,9 +141,10 @@ export async function handleKookMessagingAction(
       if (!isActionEnabled("reactions")) {
         throw new Error("KOOK reactions are disabled.");
       }
-      const channelId = readStringParam(params, "channelId", { required: true });
+      const _channelId = readStringParam(params, "channelId", { required: true });
       const messageId = readStringParam(params, "messageId", { required: true });
       const emoji = readStringParam(params, "emoji", { required: true });
+      void _channelId;
 
       await addKookReaction({
         token: params.token as string,
@@ -154,10 +159,12 @@ export async function handleKookMessagingAction(
       if (!isActionEnabled("reactions")) {
         throw new Error("KOOK reactions are disabled.");
       }
-      const channelId = readStringParam(params, "channelId", { required: true });
+      const _channelId = readStringParam(params, "channelId", { required: true });
       const messageId = readStringParam(params, "messageId", { required: true });
       const emoji = readStringParam(params, "emoji", { required: true });
-      const limit = readNumberParam(params, "limit", {}) ?? 50;
+      const _limit = readNumberParam(params, "limit", {}) ?? 50;
+      void _channelId;
+      void _limit;
 
       const users = await getKookReactionList({
         token: params.token as string,
@@ -184,10 +191,11 @@ export async function handleKookMessagingAction(
       if (!isActionEnabled("reactions")) {
         throw new Error("KOOK reactions are disabled.");
       }
-      const channelId = readStringParam(params, "channelId", { required: true });
+      const _channelId = readStringParam(params, "channelId", { required: true });
       const messageId = readStringParam(params, "messageId", { required: true });
       const emoji = readStringParam(params, "emoji", { required: true });
       const userId = readStringParam(params, "userId");
+      void _channelId;
 
       await deleteKookReaction({
         token: params.token as string,

@@ -21,29 +21,20 @@ import {
   leaveKookGuild,
   moveKookUser,
   revokeKookRole,
-  type KookChannel,
-  type KookEmoji,
-  type KookGuild,
-  type KookRole,
   updateKookChannel,
   updateKookEmoji,
   updateKookNickname,
   updateKookRole,
 } from "../../kook/api.js";
-import {
-  type ActionGate,
-  jsonResult,
-  readNumberParam,
-  readStringArrayParam,
-  readStringParam,
-} from "./common.js";
+import { type ActionGate, jsonResult, readNumberParam, readStringParam } from "./common.js";
 
 export async function handleKookGuildAction(
   action: string,
   params: Record<string, unknown>,
   isActionEnabled: ActionGate<KookActionConfig>,
 ): Promise<AgentToolResult<unknown>> {
-  const accountId = readStringParam(params, "accountId");
+  const _accountId = readStringParam(params, "accountId");
+  void _accountId;
 
   switch (action) {
     // Guild Info

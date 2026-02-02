@@ -1,24 +1,42 @@
+import type { ChannelMessageActionAdapter, ChannelMessageActionName } from "../types.js";
 import { createActionGate, readStringParam } from "../../../agents/tools/common.js";
 import { handleKookAction } from "../../../agents/tools/kook-actions.js";
 import { listKookAccountIds } from "../../../kook/accounts.js";
-import type { ChannelMessageActionAdapter, ChannelMessageActionName } from "../types.js";
 
 const providerId = "kook";
 
 export const kookMessageActions: ChannelMessageActionAdapter = {
   listActions: ({ cfg }) => {
     const accountIds = listKookAccountIds(cfg);
-    if (accountIds.length === 0) return [];
+    if (accountIds.length === 0) {
+      return [];
+    }
     const gate = createActionGate(cfg.channels?.kook?.actions);
     const actions = new Set<ChannelMessageActionName>();
-    if (gate("getMe")) actions.add("getMe" as ChannelMessageActionName);
-    if (gate("getUser")) actions.add("getUser" as ChannelMessageActionName);
-    if (gate("getGuildList")) actions.add("getGuildList" as ChannelMessageActionName);
-    if (gate("getGuild")) actions.add("getGuild" as ChannelMessageActionName);
-    if (gate("getGuildUserCount")) actions.add("getGuildUserCount" as ChannelMessageActionName);
-    if (gate("getChannel")) actions.add("getChannel" as ChannelMessageActionName);
-    if (gate("getChannelUserList")) actions.add("getChannelUserList" as ChannelMessageActionName);
-    if (gate("getGuildUsers")) actions.add("getGuildUsers" as ChannelMessageActionName);
+    if (gate("getMe")) {
+      actions.add("getMe" as ChannelMessageActionName);
+    }
+    if (gate("getUser")) {
+      actions.add("getUser" as ChannelMessageActionName);
+    }
+    if (gate("getGuildList")) {
+      actions.add("getGuildList" as ChannelMessageActionName);
+    }
+    if (gate("getGuild")) {
+      actions.add("getGuild" as ChannelMessageActionName);
+    }
+    if (gate("getGuildUserCount")) {
+      actions.add("getGuildUserCount" as ChannelMessageActionName);
+    }
+    if (gate("getChannel")) {
+      actions.add("getChannel" as ChannelMessageActionName);
+    }
+    if (gate("getChannelUserList")) {
+      actions.add("getChannelUserList" as ChannelMessageActionName);
+    }
+    if (gate("getGuildUsers")) {
+      actions.add("getGuildUsers" as ChannelMessageActionName);
+    }
     return Array.from(actions);
   },
   supportsButtons: () => false,

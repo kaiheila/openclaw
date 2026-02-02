@@ -1,13 +1,13 @@
 // KOOK Message Sending
 
+import type { OpenClawConfig } from "../config/types.openclaw.js";
+import { loadConfig } from "../config/io.js";
+import { resolveKookAccount } from "./accounts.js";
 import {
   sendKookMessage as apiSendKookMessage,
   sendKookDirectMessage as apiSendKookDirectMessage,
 } from "./api.js";
-import { resolveKookAccount } from "./accounts.js";
 import { resolveKookToken } from "./token.js";
-import { loadConfig } from "../config/io.js";
-import type { OpenClawConfig } from "../config/types.openclaw.js";
 
 export type KookSendOpts = {
   accountId?: string;
@@ -142,7 +142,7 @@ export async function sendMessageKook(
       timestamp: result.msgTimestamp,
     };
   } catch (error) {
-    console.error(`[KOOK-SEND] Failed to send message: ${error}`);
+    console.error(`[KOOK-SEND] Failed to send message: ${String(error)}`);
     throw error;
   }
 }
