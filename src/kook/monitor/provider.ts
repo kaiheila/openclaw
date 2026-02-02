@@ -2,12 +2,11 @@
 // Handles Gateway connection, signals, and heartbeat
 
 import { WebSocket } from "ws";
-import { getKookGateway } from "../api.js";
-import { createKookMessageHandler } from "./message-handler.js";
-import type { KookMessageHandler } from "./message-handler.js";
 import type { OpenClawConfig } from "../../config/types.openclaw.js";
 import type { RuntimeEnv } from "../../runtime.js";
-import { logVerbose, shouldLogVerbose, danger, warn } from "../../globals.js";
+import { danger, warn } from "../../globals.js";
+import { getKookGateway } from "../api.js";
+import { createKookMessageHandler } from "./message-handler.js";
 
 // Promisify abort signal
 function promisifyAbortSignal(signal: AbortSignal): Promise<never> {
@@ -82,8 +81,12 @@ export async function monitorKookProvider(opts: MonitorKookOpts): Promise<void> 
 
   // Clean up function
   const cleanup = () => {
-    if (heartbeatInterval) clearInterval(heartbeatInterval);
-    if (heartbeatTimeout) clearTimeout(heartbeatTimeout);
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+    }
+    if (heartbeatTimeout) {
+      clearTimeout(heartbeatTimeout);
+    }
     if (ws) {
       ws.removeAllListeners();
       ws.close();
@@ -150,7 +153,7 @@ export async function monitorKookProvider(opts: MonitorKookOpts): Promise<void> 
           signal = JSON.parse(dataStr) as KookSignal;
         } catch (parseError) {
           console.log(
-            `[KOOK-DEBUG] Failed to parse JSON: ${parseError}, raw: ${dataStr.slice(0, 100)}`,
+            `[KOOK-DEBUG] Failed to parse JSON: ${String(parseError)}, raw: ${dataStr.slice(0, 100)}`,
           );
           return;
         }
@@ -171,7 +174,7 @@ export async function monitorKookProvider(opts: MonitorKookOpts): Promise<void> 
                       : `Unknown error: ${signal.d.code}`;
               runtime.error?.(danger(`[kook] HELLO failed: ${errorMsg}`));
               cleanup();
-              throw new Error(`[kook] HELLO handshake failed: ${errorMsg}`);
+              return;
             }
 
             sessionId = signal.d.session_id || null;
@@ -235,7 +238,7 @@ export async function monitorKookProvider(opts: MonitorKookOpts): Promise<void> 
           }
         }
       } catch (error) {
-        runtime.error?.(`[kook] message handler error: ${error}`);
+        runtime.error?.(`[kook] message handler error: ${String(error)}`);
       }
     });
 
@@ -253,17 +256,23 @@ export async function monitorKookProvider(opts: MonitorKookOpts): Promise<void> 
     // Heartbeat function
     function startHeartbeat() {
       console.log("[KOOK-DEBUG] Starting heartbeat");
-      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
 
       heartbeatInterval = setInterval(
         () => {
-          if (!ws || ws.readyState !== WebSocket.OPEN) return;
+          if (!ws || ws.readyState !== WebSocket.OPEN) {
+            return;
+          }
 
           // Send PING with current sn
           ws.send(JSON.stringify({ s: 2, sn: currentSn }));
 
           // Set 6s timeout for PONG
-          if (heartbeatTimeout) clearTimeout(heartbeatTimeout);
+          if (heartbeatTimeout) {
+            clearTimeout(heartbeatTimeout);
+          }
           heartbeatTimeout = setTimeout(() => {
             runtime.error?.(danger("[kook] heartbeat timeout"));
             cleanup();

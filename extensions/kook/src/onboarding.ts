@@ -10,11 +10,7 @@ import {
   normalizeAccountId,
   promptAccountId,
 } from "openclaw/plugin-sdk";
-
-import {
-  listKookAccountIds,
-  resolveKookAccount,
-} from "../../../src/kook";
+import { listKookAccountIds, resolveKookAccount } from "../../../src/kook";
 
 const channel = "kook" as const;
 
@@ -22,7 +18,8 @@ function setKookDmPolicy(
   cfg: MoltbotConfig,
   dmPolicy: "pairing" | "allowlist" | "open" | "disabled",
 ) {
-  const allowFrom = dmPolicy === "open" ? addWildcardAllowFrom(cfg.channels?.kook?.allowFrom) : undefined;
+  const allowFrom =
+    dmPolicy === "open" ? addWildcardAllowFrom(cfg.channels?.kook?.allowFrom) : undefined;
   return {
     ...cfg,
     channels: {
@@ -63,8 +60,12 @@ async function promptKookAllowFrom(params: {
     initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
     validate: (value) => {
       const raw = String(value ?? "").trim();
-      if (!raw) return "Required";
-      if (!/^\d+$/.test(raw)) return "Use a numeric KOOK user id";
+      if (!raw) {
+        return "Required";
+      }
+      if (!/^\d+$/.test(raw)) {
+        return "Use a numeric KOOK user id";
+      }
       return undefined;
     },
   });
@@ -101,12 +102,12 @@ async function promptKookAllowFrom(params: {
         ...cfg.channels?.kook,
         enabled: true,
         accounts: {
-          ...(cfg.channels?.kook?.accounts ?? {}),
+          ...cfg.channels?.kook?.accounts,
           [accountId]: {
-            ...(cfg.channels?.kook?.accounts?.[accountId] ?? {}),
+            ...cfg.channels?.kook?.accounts?.[accountId],
             enabled: cfg.channels?.kook?.accounts?.[accountId]?.enabled ?? true,
             dm: {
-              ...(cfg.channels?.kook?.accounts?.[accountId]?.dm ?? {}),
+              ...cfg.channels?.kook?.accounts?.[accountId]?.dm,
               policy: "allowlist",
               allowFrom: unique,
             },
@@ -128,7 +129,9 @@ async function promptKookNumericConfig(params: {
     initialValue: false,
   });
 
-  if (!configureNumeric) return cfg;
+  if (!configureNumeric) {
+    return cfg;
+  }
 
   const historyLimit = await prompter.text({
     message: "History limit (number of messages to fetch)",
@@ -136,7 +139,9 @@ async function promptKookNumericConfig(params: {
     initialValue: String(cfg.channels?.kook?.historyLimit ?? 10),
     validate: (value) => {
       const num = Number(value);
-      if (isNaN(num) || num < 1) return "Must be a positive number";
+      if (isNaN(num) || num < 1) {
+        return "Must be a positive number";
+      }
       return undefined;
     },
   });
@@ -147,7 +152,9 @@ async function promptKookNumericConfig(params: {
     initialValue: String(cfg.channels?.kook?.mediaMaxMb ?? 10),
     validate: (value) => {
       const num = Number(value);
-      if (isNaN(num) || num < 1) return "Must be a positive number";
+      if (isNaN(num) || num < 1) {
+        return "Must be a positive number";
+      }
       return undefined;
     },
   });
@@ -158,7 +165,9 @@ async function promptKookNumericConfig(params: {
     initialValue: String(cfg.channels?.kook?.textChunkLimit ?? 2000),
     validate: (value) => {
       const num = Number(value);
-      if (isNaN(num) || num < 100) return "Must be at least 100";
+      if (isNaN(num) || num < 100) {
+        return "Must be at least 100";
+      }
       return undefined;
     },
   });
@@ -188,7 +197,9 @@ async function promptKookGroupPolicy(params: {
     initialValue: false,
   });
 
-  if (!configurePolicy) return cfg;
+  if (!configurePolicy) {
+    return cfg;
+  }
 
   const policy = await prompter.select({
     message: "Group/Server access policy",
@@ -221,13 +232,16 @@ async function promptKookGuilds(params: {
   const guildIds = Object.keys(existingGuilds);
 
   const addGuild = await prompter.confirm({
-    message: guildIds.length > 0
-      ? "Configure additional guilds/servers?"
-      : "Configure specific guilds/servers?",
+    message:
+      guildIds.length > 0
+        ? "Configure additional guilds/servers?"
+        : "Configure specific guilds/servers?",
     initialValue: false,
   });
 
-  if (!addGuild) return cfg;
+  if (!addGuild) {
+    return cfg;
+  }
 
   const newGuilds = { ...existingGuilds };
 
@@ -236,13 +250,19 @@ async function promptKookGuilds(params: {
       message: "Guild ID (numeric) or leave empty to finish",
       placeholder: "6367541001667830",
       validate: (value) => {
-        if (!value?.trim()) return undefined;
-        if (!/^\d+$/.test(value)) return "Must be numeric";
+        if (!value?.trim()) {
+          return undefined;
+        }
+        if (!/^\d+$/.test(value)) {
+          return "Must be numeric";
+        }
         return undefined;
       },
     });
 
-    if (!guildId?.trim()) break;
+    if (!guildId?.trim()) {
+      break;
+    }
 
     const slug = await prompter.text({
       message: "Guild slug/alias (optional)",
@@ -260,7 +280,9 @@ async function promptKookGuilds(params: {
         message: "Channel ID to allow (numeric) or leave empty to finish",
         placeholder: "5265829152322102",
       });
-      if (!channelId?.trim()) break;
+      if (!channelId?.trim()) {
+        break;
+      }
       if (!/^\d+$/.test(channelId)) {
         await prompter.note("Channel ID must be numeric", "Invalid input");
         continue;
@@ -278,7 +300,9 @@ async function promptKookGuilds(params: {
         message: "User ID allowed in this guild (numeric) or leave empty",
         placeholder: "1567351889",
       });
-      if (!userId?.trim()) break;
+      if (!userId?.trim()) {
+        break;
+      }
       userIds.push(userId);
     }
 
@@ -293,7 +317,9 @@ async function promptKookGuilds(params: {
       message: "Add another guild?",
       initialValue: false,
     });
-    if (!addMore) break;
+    if (!addMore) {
+      break;
+    }
   }
 
   return {
@@ -320,7 +346,9 @@ async function promptKookActions(params: {
     initialValue: false,
   });
 
-  if (!configureActions) return cfg;
+  if (!configureActions) {
+    return cfg;
+  }
 
   const actions = {
     reactions: await prompter.confirm({
@@ -395,7 +423,7 @@ const dmPolicy: ChannelOnboardingDmPolicy = {
   promptAllowFrom: async ({ cfg, prompter, accountId }) => {
     const id =
       accountId && normalizeAccountId(accountId)
-        ? normalizeAccountId(accountId) ?? DEFAULT_ACCOUNT_ID
+        ? (normalizeAccountId(accountId) ?? DEFAULT_ACCOUNT_ID)
         : DEFAULT_ACCOUNT_ID;
     return promptKookAllowFrom({
       cfg: cfg as MoltbotConfig,
@@ -420,11 +448,15 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
       quickstartScore: configured ? 1 : 10,
     };
   },
-  configure: async ({ cfg, prompter, accountOverrides, shouldPromptAccountIds, forceAllowFrom }) => {
+  configure: async ({
+    cfg,
+    prompter,
+    accountOverrides,
+    shouldPromptAccountIds,
+    forceAllowFrom,
+  }) => {
     const kookOverride = accountOverrides.kook?.trim();
-    let kookAccountId = kookOverride
-      ? normalizeAccountId(kookOverride)
-      : DEFAULT_ACCOUNT_ID;
+    let kookAccountId = kookOverride ? normalizeAccountId(kookOverride) : DEFAULT_ACCOUNT_ID;
     if (shouldPromptAccountIds && !kookOverride) {
       kookAccountId = await promptAccountId({
         cfg: cfg as MoltbotConfig,
@@ -442,8 +474,7 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
     const allowEnv = kookAccountId === DEFAULT_ACCOUNT_ID;
     const canUseEnv = allowEnv && Boolean(process.env.KOOK_BOT_TOKEN?.trim());
     const hasConfigToken = Boolean(
-      resolvedAccount.config.token ||
-      (cfg.channels?.kook as Record<string, unknown>)?.token,
+      resolvedAccount.config.token || (cfg.channels?.kook as Record<string, unknown>)?.token,
     );
 
     let token: string | null = null;
@@ -518,9 +549,9 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
               ...next.channels?.kook,
               enabled: true,
               accounts: {
-                ...(next.channels?.kook?.accounts ?? {}),
+                ...next.channels?.kook?.accounts,
                 [kookAccountId]: {
-                  ...(next.channels?.kook?.accounts?.[kookAccountId] ?? {}),
+                  ...next.channels?.kook?.accounts?.[kookAccountId],
                   enabled: true,
                   token,
                 },

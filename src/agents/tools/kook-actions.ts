@@ -10,9 +10,9 @@ import {
   getKookChannel,
   getKookChannelUserList,
 } from "../../kook/api.js";
-import { handleKookMessagingAction } from "./kook-actions-messaging.js";
-import { handleKookGuildAction } from "./kook-actions-guild.js";
 import { createActionGate, jsonResult, readStringParam } from "./common.js";
+import { handleKookGuildAction } from "./kook-actions-guild.js";
+import { handleKookMessagingAction } from "./kook-actions-messaging.js";
 
 export async function handleKookAction(
   params: Record<string, unknown>,
@@ -35,7 +35,7 @@ export async function handleKookAction(
   const token = account.token;
 
   // Add token to params for sub-handlers
-  (params as any).token = token;
+  params.token = token;
 
   // ============================================================
   // User Actions

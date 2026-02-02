@@ -1,20 +1,23 @@
 // KOOK Message Handler
 // Processes incoming KOOK events and routes to agent
 
-import type {OpenClawConfig} from "../../config/types.openclaw.js";
-import type {RuntimeEnv} from "../../runtime.js";
-import {type KookChannelConfig, resolveKookAccount} from "../accounts.js";
-import {danger, logVerbose, shouldLogVerbose} from "../../globals.js";
-import {dispatchInboundMessageWithBufferedDispatcher} from "../../auto-reply/dispatch.js";
-import {finalizeInboundContext} from "../../auto-reply/reply/inbound-context.js";
-import {createReplyDispatcherWithTyping} from "../../auto-reply/reply/reply-dispatcher.js";
-import {recordInboundSession} from "../../channels/session.js";
-import {buildAgentSessionKey, resolveAgentRoute} from "../../routing/resolve-route.js";
-import type {MsgContext} from "../../auto-reply/templating.js";
-import {sendMessageKook} from "../send.js";
-import {resolveStorePath} from "../../config/sessions.js";
-import {readChannelAllowFromStore, upsertChannelPairingRequest,} from "../../pairing/pairing-store.js";
-import {buildPairingReply} from "../../pairing/pairing-messages.js";
+import type { MsgContext } from "../../auto-reply/templating.js";
+import type { OpenClawConfig } from "../../config/types.openclaw.js";
+import type { RuntimeEnv } from "../../runtime.js";
+import { dispatchInboundMessageWithBufferedDispatcher } from "../../auto-reply/dispatch.js";
+import { finalizeInboundContext } from "../../auto-reply/reply/inbound-context.js";
+import { createReplyDispatcherWithTyping } from "../../auto-reply/reply/reply-dispatcher.js";
+import { recordInboundSession } from "../../channels/session.js";
+import { resolveStorePath } from "../../config/sessions.js";
+import { danger, logVerbose, shouldLogVerbose } from "../../globals.js";
+import { buildPairingReply } from "../../pairing/pairing-messages.js";
+import {
+  readChannelAllowFromStore,
+  upsertChannelPairingRequest,
+} from "../../pairing/pairing-store.js";
+import { buildAgentSessionKey, resolveAgentRoute } from "../../routing/resolve-route.js";
+import { resolveKookAccount } from "../accounts.js";
+import { sendMessageKook } from "../send.js";
 
 export type KookMessageHandler = (event: KookEventData) => Promise<void>;
 
@@ -125,7 +128,7 @@ async function isBotMessage(event: KookEventData, token: string): Promise<boolea
     const botUserId = await getBotUserId(token);
     return event.author_id === botUserId;
   } catch (error) {
-    console.error(`[KOOK-MSG] Failed to check if message is from bot: ${error}`);
+    console.error(`[KOOK-MSG] Failed to check if message is from bot: ${String(error)}`);
     return false;
   }
 }
@@ -157,7 +160,7 @@ async function getBotUserId(token: string): Promise<string> {
       }
     }
   } catch (error) {
-    console.error(`[KOOK-MSG] Failed to fetch bot user ID: ${error}`);
+    console.error(`[KOOK-MSG] Failed to fetch bot user ID: ${String(error)}`);
   }
 
   // Return a default value if we can't get the bot ID
@@ -242,9 +245,7 @@ export function createKookMessageHandler(params: CreateHandlerParams): KookMessa
 
         // Read pairing store allowlist
         const storeAllowFrom = await readChannelAllowFromStore("kook").catch(() => []);
-        const combinedAllowFrom = Array.from(
-          new Set([...configuredAllowFrom, ...storeAllowFrom]),
-        );
+        const combinedAllowFrom = Array.from(new Set([...configuredAllowFrom, ...storeAllowFrom]));
 
         console.log(
           `[KOOK-MSG] DM policy check: policy=${dmPolicy}, configured=[${configuredAllowFrom.join(",")}], store=[${storeAllowFrom.join(",")}], author_id=${event.author_id}`,
@@ -292,10 +293,12 @@ export function createKookMessageHandler(params: CreateHandlerParams): KookMessa
                     currentCfg,
                   );
                 } catch (err) {
-                  console.error(`[KOOK-MSG] Failed to send pairing reply: ${err}`);
+                  console.error(`[KOOK-MSG] Failed to send pairing reply: ${String(err)}`);
                 }
               } else if (code && !created) {
-                console.log(`[KOOK-MSG] Existing pairing request for ${event.author_id}, skipping reply`);
+                console.log(
+                  `[KOOK-MSG] Existing pairing request for ${event.author_id}, skipping reply`,
+                );
               }
             }
 
@@ -347,7 +350,7 @@ export function createKookMessageHandler(params: CreateHandlerParams): KookMessa
 
           // Check if channel is allowed
           const channelId = event.target_id;
-          const channelConfig = guildConfig.channels?.[channelId] as KookChannelConfig | undefined;
+          const channelConfig = guildConfig.channels?.[channelId];
 
           console.log(
             `[KOOK-MSG] Channel allowlist check: channelId=${channelId}, channelConfig=${!!channelConfig}, allow=${channelConfig?.allow}`,
@@ -407,7 +410,7 @@ export function createKookMessageHandler(params: CreateHandlerParams): KookMessa
         const guildConfig = guilds[event.extra.guild_id];
         if (guildConfig) {
           const channelId = event.target_id;
-          const channelConfig = guildConfig.channels?.[channelId] as KookChannelConfig | undefined;
+          const channelConfig = guildConfig.channels?.[channelId];
           if (channelConfig && typeof channelConfig.requireMention === "boolean") {
             requiresMention = channelConfig.requireMention;
           } else if (typeof guildConfig.requireMention === "boolean") {
@@ -426,7 +429,7 @@ export function createKookMessageHandler(params: CreateHandlerParams): KookMessa
           mentionsBot = event.extra.mention?.includes(botUserId) || false;
           console.log(`[KOOK-MSG] Mention list: ${JSON.stringify(event.extra.mention)}`);
         } catch (error) {
-          console.error(`[KOOK-MSG] Failed to check bot mention: ${error}`);
+          console.error(`[KOOK-MSG] Failed to check bot mention: ${String(error)}`);
           // If we can't check bot mention and channel requires mention, skip the message
           if (requiresMention) {
             console.log(`[KOOK-MSG] Skipping message due to bot mention check failure`);
@@ -519,7 +522,7 @@ export function createKookMessageHandler(params: CreateHandlerParams): KookMessa
       });
 
       // Create reply dispatcher
-      const { dispatcher, replyOptions, markDispatchIdle } = createReplyDispatcherWithTyping({
+      const { replyOptions, markDispatchIdle } = createReplyDispatcherWithTyping({
         deliver: async (payload) => {
           console.log(
             `[KOOK-MSG] Dispatcher delivering: to=${effectiveTo}, text="${(payload.text || "").slice(0, 50)}..."`,
@@ -545,8 +548,8 @@ export function createKookMessageHandler(params: CreateHandlerParams): KookMessa
           }
         },
         onError: (err) => {
-          console.error(`[KOOK-MSG] Reply error: ${err}`);
-          runtime.error?.(danger(`[kook] reply error: ${err}`));
+          console.error(`[KOOK-MSG] Reply error: ${String(err)}`);
+          runtime.error?.(danger(`[kook] reply error: ${String(err)}`));
         },
       });
 
@@ -561,57 +564,52 @@ export function createKookMessageHandler(params: CreateHandlerParams): KookMessa
       }
 
       console.log(`[KOOK-MSG] About to call dispatchInboundMessageWithBufferedDispatcher...`);
-      try {
-        await dispatchInboundMessageWithBufferedDispatcher({
-          ctx: finalizedCtx,
-          cfg: currentCfg,
-          dispatcherOptions: {
-            deliver: async (payload) => {
-              // Use the created dispatcher to send the message
-              console.log(
-                `[KOOK-MSG] Buffered dispatcher delivering: text="${(payload.text || "").slice(0, 50)}..."`,
+      await dispatchInboundMessageWithBufferedDispatcher({
+        ctx: finalizedCtx,
+        cfg: currentCfg,
+        dispatcherOptions: {
+          deliver: async (payload) => {
+            // Use the created dispatcher to send the message
+            console.log(
+              `[KOOK-MSG] Buffered dispatcher delivering: text="${(payload.text || "").slice(0, 50)}..."`,
+            );
+            if (payload.text) {
+              // Pass cfg directly to sendMessageKook to ensure token is available
+              await sendMessageKook(
+                effectiveTo,
+                payload.text || "",
+                {
+                  accountId: currentAccountId,
+                  // token will be resolved from config in sendMessageKook
+                  quote: event.msg_id,
+                  type: 9,
+                },
+                currentCfg,
               );
-              if (payload.text) {
-                // Pass cfg directly to sendMessageKook to ensure token is available
-                await sendMessageKook(
-                  effectiveTo,
-                  payload.text || "",
-                  {
-                    accountId: currentAccountId,
-                    // token will be resolved from config in sendMessageKook
-                    quote: event.msg_id,
-                    type: 9,
-                  },
-                  currentCfg,
-                );
-                console.log(`[KOOK-MSG] Buffered dispatcher delivery completed`);
-              }
-            },
-            responsePrefix: undefined,
-            onReplyStart: replyOptions.onReplyStart,
-            onError: (err) => {
-              console.error(`[KOOK-MSG] Dispatch error: ${err}`);
-              runtime.error?.(danger(`[kook] dispatch error: ${err}`));
-            },
+              console.log(`[KOOK-MSG] Buffered dispatcher delivery completed`);
+            }
           },
-          replyOptions: {
-            onModelSelected: (ctx) => {
-              console.log(`[KOOK-MSG] Model selected: ${ctx.model}`);
-              if (shouldLogVerbose()) {
-                logVerbose(`[kook] using model: ${ctx.model}`);
-              }
-            },
+          responsePrefix: undefined,
+          onReplyStart: replyOptions.onReplyStart,
+          onError: (err) => {
+            console.error(`[KOOK-MSG] Dispatch error: ${String(err)}`);
+            runtime.error?.(danger(`[kook] dispatch error: ${String(err)}`));
           },
-        });
+        },
+        replyOptions: {
+          onModelSelected: (ctx) => {
+            console.log(`[KOOK-MSG] Model selected: ${ctx.model}`);
+            if (shouldLogVerbose()) {
+              logVerbose(`[kook] using model: ${ctx.model}`);
+            }
+          },
+        },
+      });
 
-        console.log(`[KOOK-MSG] Dispatch completed successfully`);
-        markDispatchIdle();
-      } catch (dispatchError) {
-        console.error(`[KOOK-MSG] Dispatch failed: ${dispatchError}`);
-        throw dispatchError;
-      }
+      console.log(`[KOOK-MSG] Dispatch completed successfully`);
+      markDispatchIdle();
     } catch (error) {
-      runtime.error?.(`[kook] message handler error: ${error}`);
+      runtime.error?.(`[kook] message handler error: ${String(error)}`);
     }
   };
 }
