@@ -53,6 +53,15 @@ export const MESSAGE_ACTION_TARGET_MODE: Record<ChannelMessageActionName, Messag
     timeout: "none",
     kick: "none",
     ban: "none",
+    // KOOK-specific actions
+    getMe: "none",
+    getUser: "none",
+    getGuildList: "none",
+    getGuild: "none",
+    getGuildUserCount: "none",
+    getGuildUsers: "none",
+    getChannel: "channelId",
+    getChannelUserList: "channelId",
   };
 
 const ACTION_TARGET_ALIASES: Partial<Record<ChannelMessageActionName, string[]>> = {
