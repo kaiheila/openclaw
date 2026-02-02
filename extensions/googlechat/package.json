@@ -35,5 +35,14 @@
       "localPath": "extensions/googlechat",
       "defaultChoice": "npm"
     }
+  },
+  "dependencies": {
+    "google-auth-library": "^10.5.0"
+  },
+  "devDependencies": {
+    "moltbot": "workspace:*"
+  },
+  "peerDependencies": {
+    "moltbot": ">=2026.1.27-beta.1"
   }
 }

@@ -48,6 +48,15 @@ export const CHANNEL_MESSAGE_ACTION_NAMES = [
   "timeout",
   "kick",
   "ban",
+  // KOOK-specific actions
+  "getMe",
+  "getUser",
+  "getGuildList",
+  "getGuild",
+  "getGuildUserCount",
+  "getGuildUsers",
+  "getChannel",
+  "getChannelUserList",
 ] as const;
 
 export type ChannelMessageActionName = (typeof CHANNEL_MESSAGE_ACTION_NAMES)[number];

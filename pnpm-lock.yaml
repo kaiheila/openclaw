@@ -315,15 +315,17 @@ importers:
         specifier: ^10.5.0
         version: 10.5.0
     devDependencies:
-      openclaw:
+      moltbot:
         specifier: workspace:*
-        version: link:../..
+        version: link:../../packages/moltbot
 
   extensions/imessage:
     devDependencies:
       openclaw:
         specifier: workspace:*
         version: link:../..
+
+  extensions/kook: {}
 
   extensions/line:
     devDependencies:
@@ -373,9 +375,9 @@ importers:
 
   extensions/memory-core:
     devDependencies:
-      openclaw:
+      moltbot:
         specifier: workspace:*
-        version: link:../..
+        version: link:../../packages/moltbot
 
   extensions/memory-lancedb:
     dependencies:
