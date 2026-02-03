@@ -1,12 +1,16 @@
 {
-  "name": "openclaw",
-  "version": "2026.2.1",
-  "description": "WhatsApp gateway CLI (Baileys web) with Pi RPC agent",
-  "keywords": [],
+  "name": "kook-openclaw",
+  "version": "2026.2.1-kook.2",
+  "description": "OpenClaw with KOOK channel support",
+  "keywords": ["kook", "kaiheila", "bot", "gateway"],
   "license": "MIT",
   "author": "",
   "bin": {
+    "kook-openclaw": "openclaw.mjs",
     "openclaw": "openclaw.mjs"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   },
   "files": [
     "CHANGELOG.md",
@@ -43,6 +47,7 @@
     "dist/hooks/**",
     "dist/imessage/**",
     "dist/infra/**",
+    "dist/kook/**",
     "dist/line/**",
     "dist/link-understanding/**",
     "dist/logging/**",
@@ -65,6 +70,8 @@
     "dist/slack/**",
     "dist/telegram/**",
     "dist/terminal/**",
+    "dist/test-helpers/**",
+    "dist/test-utils/**",
     "dist/tts/**",
     "dist/tui/**",
     "dist/utils/**",

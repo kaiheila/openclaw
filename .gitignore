@@ -72,3 +72,6 @@ USER.md
 # local tooling
 .serena/
 /kook_doc/
+
+# npm config with auth token
+.npmrc
