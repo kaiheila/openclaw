@@ -13,11 +13,5 @@
     "extensions": [
       "./index.ts"
     ]
-  },
-  "peerDependencies": {
-    "moltbot": ">=2026.1.27-beta.1"
-  },
-  "devDependencies": {
-    "moltbot": "workspace:*"
   }
 }
