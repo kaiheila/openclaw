@@ -32,6 +32,20 @@ export const kookPlugin: ChannelPlugin<ResolvedKookAccount> = {
   onboarding: kookOnboardingAdapter,
 
   /**
+   * Pairing support for DM approval
+   */
+  pairing: {
+    idLabel: "kookUserId",
+    normalizeAllowEntry: (entry) => entry.replace(/^(kook|user):/i, "").replace(/^<@(\d+)>$/, "$1"),
+    notifyApproval: async ({ id }) => {
+      await getKookRuntime().channel.kook.sendMessageKook(
+        `user:${id}`,
+        "✅ Your pairing request has been approved! You can now send messages to this bot.",
+      );
+    },
+  },
+
+  /**
    * Capabilities
    */
   capabilities: {
