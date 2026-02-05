@@ -4,11 +4,12 @@ import type { ChannelPlugin, ResolvedKookAccount } from "openclaw/plugin-sdk";
 import {
   resolveKookAccount,
   listKookAccountIds,
-  normalizeAccountId,
-  DEFAULT_ACCOUNT_ID,
-} from "../../../src/kook/accounts.js";
-import { kookOnboardingAdapter } from "./onboarding.js";
+  normalizeKookAccountId as normalizeAccountId,
+  DEFAULT_KOOK_ACCOUNT_ID as DEFAULT_ACCOUNT_ID,
+  kookOnboardingAdapter,
+} from "openclaw/plugin-sdk";
 import { getKookRuntime } from "./runtime.js";
+import type { ChannelMessageActionAdapter } from "openclaw/plugin-sdk";
 
 /**
  * KOOK Channel Plugin
@@ -25,6 +26,18 @@ export const kookPlugin: ChannelPlugin<ResolvedKookAccount> = {
     blurb: "KOOK (开黑啦) - Chinese gaming voice chat platform",
     systemImage: "message.badge",
   },
+
+  /**
+   * Message Actions
+   * Delegates to Runtime (Core implementation)
+   * Same pattern as Discord
+   */
+  actions: {
+    listActions: (ctx) => getKookRuntime().channel.kook.messageActions.listActions(ctx),
+    extractToolSend: (ctx) => getKookRuntime().channel.kook.messageActions.extractToolSend(ctx),
+    handleAction: async (ctx) =>
+      await getKookRuntime().channel.kook.messageActions.handleAction(ctx),
+  } as ChannelMessageActionAdapter,
 
   /**
    * Onboarding
@@ -226,6 +239,158 @@ export const kookPlugin: ChannelPlugin<ResolvedKookAccount> = {
         mediaMaxMb: ctx.account.config.mediaMaxMb,
         historyLimit: ctx.account.config.historyLimit,
       });
+    },
+  },
+
+  /**
+   * Agent Prompt - Kook-specific tool usage guidance
+   */
+  agentPrompt: {
+    messageToolHints: ({ cfg, accountId }) => {
+      const account = accountId
+        ? resolveKookAccount({ cfg, accountId })
+        : resolveKookAccount({ cfg, accountId: DEFAULT_ACCOUNT_ID });
+
+      const actions = account.config.actions ?? {};
+      const hints: string[] = ["", "### KOOK (开黑啦) Platform Capabilities", ""];
+
+      // Platform intro
+      hints.push(
+        "You are operating on KOOK (开黑啦), a Chinese gaming voice chat platform similar to Discord.",
+        "KOOK uses numeric IDs for guilds (servers), channels, users, and roles.",
+        "IMPORTANT: The user is Chinese. You must reply in Chinese (中文) unless explicitly asked otherwise.",
+        "",
+      );
+
+      // Core messaging
+      hints.push(
+        "**Core Messaging:**",
+        "- Use `action=send` with `to=user:<userId>` for direct messages",
+        "- Use `action=send` with `to=channel:<channelId>` for channel messages",
+        "- Use `action=send` with `to=<channelId>` (guild channel, shorthand)",
+        "- Reply to messages: include `replyToId` parameter",
+        "- Add reactions: `action=react` with `emoji` parameter",
+        "",
+      );
+
+      // Guild/Server operations
+      const guildOps: string[] = [];
+      if (actions.getGuildList ?? true) {
+        guildOps.push("  - `action=guild-list` - List servers you belong to");
+      }
+      if (actions.getGuild ?? true) {
+        guildOps.push("  - `action=guild-info` with `guildId` - Get server details");
+      }
+      if (actions.getGuildUserCount ?? true) {
+        guildOps.push("  - `action=guild-user-count` with `guildId` - Get member count");
+      }
+      if (actions.getGuildUsers ?? true) {
+        guildOps.push("  - `action=guild-users` with `guildId` - List members (paginated)");
+      }
+      if (guildOps.length > 0) {
+        hints.push("**Guild/Server Operations:**", ...guildOps, "");
+      }
+
+      // Channel operations
+      const channelOps: string[] = [];
+      if (actions.getChannel ?? true) {
+        channelOps.push("  - `action=channel-info` with `channelId` - Get channel details");
+      }
+      if (actions.getChannelList ?? true) {
+        channelOps.push("  - `action=channel-list` with `guildId` - List channels in a server");
+      }
+      if (actions.getChannelUserList ?? true) {
+        channelOps.push("  - `action=channel-user-list` with `channelId` - List users in a voice channel");
+      }
+      if (actions.channels) {
+        channelOps.push(
+          "  - `action=channel-create` with `guildId`, `name`, `type` (1=text/2=voice) - Create channel",
+          "  - `action=channel-update` with `channelId` - Modify channel settings",
+          "  - `action=channel-delete` with `channelId` - Delete channel",
+          "  - `action=move-user` with `userId`, `targetChannelId` - Move user to voice channel",
+        );
+      }
+      if (channelOps.length > 0) {
+        hints.push("**Channel Operations:**", ...channelOps, "");
+      }
+
+      // Role management
+      const roleOps: string[] = [];
+      if (actions.roleInfo ?? true) {
+        roleOps.push("  - `action=role-info` with `guildId` - List all roles in a server");
+      }
+      if (actions.roles) {
+        roleOps.push(
+          "  - `action=role-create` with `guildId`, `name`, `color?`, `permissions?` - Create role",
+          "  - `action=role-update` with `guildId`, `roleId` - Modify role",
+          "  - `action=role-delete` with `guildId`, `roleId` - Delete role",
+          "  - `action=role-grant` with `guildId`, `userId`, `roleId` - Assign role to user",
+          "  - `action=role-revoke` with `guildId`, `userId`, `roleId` - Remove role from user",
+        );
+      }
+      if (roleOps.length > 0) {
+        hints.push("**Role Management:**", ...roleOps, "");
+      }
+
+      // Member operations
+      const memberOps: string[] = [];
+      if (actions.getUser ?? true) {
+        memberOps.push("  - `action=get-user` with `userId`, `guildId?` - Get user info");
+      }
+      if (actions.memberInfo) {
+        memberOps.push("  - `action=update-nickname` with `guildId`, `userId`, `nickname` - Change nickname");
+      }
+      if (actions.moderation) {
+        memberOps.push(
+          "  - `action=kick-user` with `guildId`, `userId` - Kick member from server",
+          "  - `action=mute-create` with `guildId`, `userId`, `type`, `duration?` - Mute user (type: 1=mic, 2=headset)",
+          "  - `action=mute-delete` with `guildId`, `userId`, `type` - Unmute user",
+          "  - `action=mute-list` with `guildId` - List muted users",
+        );
+      }
+      if (memberOps.length > 0) {
+        hints.push("**Member Operations:**", ...memberOps, "");
+      }
+
+      // Emoji operations
+      const emojiOps: string[] = [];
+      if (actions.emojiList ?? true) {
+        emojiOps.push("  - `action=emoji-list` with `guildId` - List custom emojis");
+      }
+      if (actions.emojiUploads) {
+        emojiOps.push(
+          "  - `action=emoji-create` with `guildId`, `name`, `emoji` (emoji or URL) - Add emoji",
+          "  - `action=emoji-update` with `guildId`, `emojiId` - Rename emoji",
+          "  - `action=emoji-delete` with `guildId`, `emojiId` - Remove emoji",
+        );
+      }
+      if (emojiOps.length > 0) {
+        hints.push("**Emoji Management:**", ...emojiOps, "");
+      }
+
+      // Common patterns
+      hints.push(
+        "**Common Usage Patterns:**",
+        "1. To create a role and assign it:",
+        "   - First: `action=role-create` with guildId and name",
+        "   - Then: `action=role-grant` with the returned roleId",
+        "",
+        "2. To manage server members:",
+        "   - `action=guild-users` to get member list",
+        "   - Extract userId from the response",
+        "   - Use that userId for subsequent operations",
+        "",
+        "3. ID formats in KOOK:",
+        "   - Guild IDs: numeric (e.g., 6367541001660000)",
+        "   - User IDs: numeric (e.g., 23717000000)",
+        "   - Role IDs: numeric (e.g., 1523000)",
+        "   - Channel IDs: numeric (e.g., 5265829150000000)",
+        "",
+        "**Note:** Some operations require the bot to have appropriate permissions in the server.",
+        "",
+      );
+
+      return hints;
     },
   },
 

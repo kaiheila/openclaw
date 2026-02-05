@@ -48,15 +48,34 @@ export const CHANNEL_MESSAGE_ACTION_NAMES = [
   "timeout",
   "kick",
   "ban",
-  // KOOK-specific actions
-  "getMe",
-  "getUser",
-  "getGuildList",
-  "getGuild",
-  "getGuildUserCount",
-  "getGuildUsers",
-  "getChannel",
-  "getChannelUserList",
+  // KOOK-specific actions (kebab-case for message tool compatibility)
+  "get-me",
+  "get-user",
+  "guild-list",
+  "guild-info",
+  "guild-user-count",
+  "guild-users",
+  "channel-user-list",
+  // KOOK Role Management
+  "role-create",
+  "role-update",
+  "role-delete",
+  "role-grant",
+  "role-revoke",
+  // KOOK Channel Management (channel-create/delete use Discord definitions)
+  "channel-update",
+  "move-user",
+  // KOOK Member & Moderation
+  "update-nickname",
+  "kick-user",
+  "leave-guild",
+  // KOOK Emoji Management
+  "emoji-create",
+  "emoji-update",
+  "emoji-delete",
+  // KOOK Mute Management
+  "mute-create",
+  "mute-delete",
 ] as const;
 
 export type ChannelMessageActionName = (typeof CHANNEL_MESSAGE_ACTION_NAMES)[number];
