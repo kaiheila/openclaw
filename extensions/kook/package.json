@@ -3,25 +3,12 @@
   "version": "2026.2.1",
   "description": "OpenClaw KOOK channel plugin",
   "type": "module",
+  "devDependencies": {
+    "openclaw": "workspace:*"
+  },
   "openclaw": {
     "extensions": [
       "./index.ts"
-    ],
-    "channel": {
-      "id": "kook",
-      "label": "KOOK",
-      "selectionLabel": "KOOK (Bot API)",
-      "detailLabel": "KOOK Bot",
-      "docsPath": "/channels/kook",
-      "docsLabel": "kook",
-      "blurb": "KOOK (开黑啦) - Chinese gaming voice chat platform",
-      "systemImage": "message.badge",
-      "order": 80
-    },
-    "install": {
-      "npmSpec": "@openclaw/kook",
-      "localPath": "extensions/kook",
-      "defaultChoice": "local"
-    }
+    ]
   }
 }

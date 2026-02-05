@@ -45,6 +45,48 @@ const KookAccountConfigSchema = z
   })
   .strict();
 
+// Kook Actions Configuration Schema
+// Default: read-only actions enabled, write/modify/delete actions disabled
+const KookActionsSchema = z
+  .object({
+    // User Queries (default: enabled)
+    getMe: z.boolean().optional(),
+    getUser: z.boolean().optional(),
+
+    // Guild Queries (default: enabled)
+    getGuildList: z.boolean().optional(),
+    getGuild: z.boolean().optional(),
+    getGuildUserCount: z.boolean().optional(),
+    getGuildUsers: z.boolean().optional(),
+    guildInfo: z.boolean().optional(), // Group for getGuild, getGuildUserCount, getGuildUsers
+
+    // Channel Queries (default: enabled)
+    getChannel: z.boolean().optional(),
+    getChannelList: z.boolean().optional(),
+    getChannelUserList: z.boolean().optional(),
+    channelInfo: z.boolean().optional(), // Group for getChannel, getChannelUserList
+
+    // Role Management (default: read-only enabled, write disabled)
+    roleInfo: z.boolean().optional(),
+    roles: z.boolean().optional(), // Group toggle for all role write operations
+
+    // Channel Management (default: disabled)
+    channels: z.boolean().optional(), // Group toggle for channel create/update/delete/move
+
+    // Member Management (default: disabled)
+    memberInfo: z.boolean().optional(), // For updateNickname
+    moderation: z.boolean().optional(), // Group toggle for kick/mute operations
+
+    // Emoji Management (default: read-only enabled, write disabled)
+    emojiList: z.boolean().optional(),
+    emojiUploads: z.boolean().optional(), // Group toggle for emoji create/update/delete
+
+    // Voice Management (default: disabled)
+    voiceStatus: z.boolean().optional(), // For voice channel operations
+  })
+  .strict()
+  .optional();
+
 export const KookConfigSchema = z
   .object({
     enabled: z.boolean().optional(),
@@ -58,7 +100,7 @@ export const KookConfigSchema = z
     textChunkLimit: z.number().optional(),
     replyToMode: ReplyToModeSchema.optional(),
     accounts: z.record(z.string(), KookAccountConfigSchema.optional()).optional(),
-    actions: z.record(z.string(), z.boolean()).optional(),
+    actions: KookActionsSchema,
   })
   .strict();
 
