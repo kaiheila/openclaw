@@ -1,25 +1,22 @@
-import type {
-  ChannelOnboardingAdapter,
-  ChannelOnboardingDmPolicy,
-  MoltbotConfig,
-  WizardPrompter,
-} from "openclaw/plugin-sdk";
+import type {OpenClawConfig} from "../../../config/config.js";
+import type {WizardPrompter} from "../../../wizard/prompts.js";
+import type {ChannelOnboardingAdapter, ChannelOnboardingDmPolicy} from "../onboarding-types.js";
 import {
-  addWildcardAllowFrom,
   DEFAULT_ACCOUNT_ID,
+  listKookAccountIds,
   normalizeAccountId,
-  promptAccountId,
-} from "openclaw/plugin-sdk";
-import { listKookAccountIds, resolveKookAccount } from "../../../src/kook";
+  resolveKookAccount,
+} from "../../../kook/accounts.js";
+import {addWildcardAllowFrom, promptAccountId} from "./helpers.js";
 
 const channel = "kook" as const;
 
 function setKookDmPolicy(
-  cfg: MoltbotConfig,
+  cfg: OpenClawConfig,
   dmPolicy: "pairing" | "allowlist" | "open" | "disabled",
 ) {
   const allowFrom =
-    dmPolicy === "open" ? addWildcardAllowFrom(cfg.channels?.kook?.allowFrom) : undefined;
+    dmPolicy === "open" ? addWildcardAllowFrom(cfg.channels?.kook?.dm?.allowFrom) : undefined;
   return {
     ...cfg,
     channels: {
@@ -30,7 +27,7 @@ function setKookDmPolicy(
         ...(allowFrom ? { allowFrom } : {}),
       },
     },
-  } as MoltbotConfig;
+  } as OpenClawConfig;
 }
 
 async function noteKookTokenHelp(prompter: WizardPrompter): Promise<void> {
@@ -47,10 +44,10 @@ async function noteKookTokenHelp(prompter: WizardPrompter): Promise<void> {
 }
 
 async function promptKookAllowFrom(params: {
-  cfg: MoltbotConfig;
+  cfg: OpenClawConfig;
   prompter: WizardPrompter;
   accountId: string;
-}): Promise<MoltbotConfig> {
+}): Promise<OpenClawConfig> {
   const { cfg, prompter, accountId } = params;
   const resolved = resolveKookAccount({ cfg, accountId });
   const existingAllowFrom = resolved.config.dm?.allowFrom ?? [];
@@ -58,8 +55,13 @@ async function promptKookAllowFrom(params: {
     message: "KOOK allowFrom (user id)",
     placeholder: "123456789",
     initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
-    validate: (value) => {
-      const raw = String(value ?? "").trim();
+    validate: (value: unknown) => {
+      const raw =
+        typeof value === "string"
+          ? value.trim()
+          : typeof value === "number"
+            ? String(value).trim()
+            : "";
       if (!raw) {
         return "Required";
       }
@@ -91,7 +93,7 @@ async function promptKookAllowFrom(params: {
           },
         },
       },
-    } as MoltbotConfig;
+    } as OpenClawConfig;
   }
 
   return {
@@ -115,13 +117,13 @@ async function promptKookAllowFrom(params: {
         },
       },
     },
-  } as MoltbotConfig;
+  } as OpenClawConfig;
 }
 
 async function promptKookNumericConfig(params: {
-  cfg: MoltbotConfig;
+  cfg: OpenClawConfig;
   prompter: WizardPrompter;
-}): Promise<MoltbotConfig> {
+}): Promise<OpenClawConfig> {
   const { cfg, prompter } = params;
 
   const configureNumeric = await prompter.confirm({
@@ -183,13 +185,13 @@ async function promptKookNumericConfig(params: {
         textChunkLimit: Number(textChunkLimit),
       },
     },
-  } as MoltbotConfig;
+  } as OpenClawConfig;
 }
 
 async function promptKookGroupPolicy(params: {
-  cfg: MoltbotConfig;
+  cfg: OpenClawConfig;
   prompter: WizardPrompter;
-}): Promise<MoltbotConfig> {
+}): Promise<OpenClawConfig> {
   const { cfg, prompter } = params;
 
   const configurePolicy = await prompter.confirm({
@@ -219,13 +221,13 @@ async function promptKookGroupPolicy(params: {
         groupPolicy: policy,
       },
     },
-  } as MoltbotConfig;
+  } as OpenClawConfig;
 }
 
 async function promptKookGuilds(params: {
-  cfg: MoltbotConfig;
+  cfg: OpenClawConfig;
   prompter: WizardPrompter;
-}): Promise<MoltbotConfig> {
+}): Promise<OpenClawConfig> {
   const { cfg, prompter } = params;
 
   const existingGuilds = cfg.channels?.kook?.guilds ?? {};
@@ -331,13 +333,13 @@ async function promptKookGuilds(params: {
         guilds: Object.keys(newGuilds).length > 0 ? newGuilds : undefined,
       },
     },
-  } as MoltbotConfig;
+  } as OpenClawConfig;
 }
 
 async function promptKookActions(params: {
-  cfg: MoltbotConfig;
+  cfg: OpenClawConfig;
   prompter: WizardPrompter;
-}): Promise<MoltbotConfig> {
+}): Promise<OpenClawConfig> {
   const { cfg, prompter } = params;
   const existing = cfg.channels?.kook?.actions ?? {};
 
@@ -351,26 +353,7 @@ async function promptKookActions(params: {
   }
 
   const actions = {
-    reactions: await prompter.confirm({
-      message: "Enable reactions?",
-      initialValue: existing.reactions ?? true,
-    }),
-    messages: await prompter.confirm({
-      message: "Enable messages?",
-      initialValue: existing.messages ?? true,
-    }),
-    memberInfo: await prompter.confirm({
-      message: "Enable member info?",
-      initialValue: existing.memberInfo ?? true,
-    }),
-    guildInfo: await prompter.confirm({
-      message: "Enable guild info?",
-      initialValue: existing.guildInfo ?? true,
-    }),
-    channelInfo: await prompter.confirm({
-      message: "Enable channel info?",
-      initialValue: existing.channelInfo ?? true,
-    }),
+    // User Queries
     getMe: await prompter.confirm({
       message: "Enable getMe (bot self info)?",
       initialValue: existing.getMe ?? true,
@@ -379,6 +362,8 @@ async function promptKookActions(params: {
       message: "Enable getUser (user lookup)?",
       initialValue: existing.getUser ?? true,
     }),
+
+    // Guild Queries
     getGuildList: await prompter.confirm({
       message: "Enable getGuildList?",
       initialValue: existing.getGuildList ?? true,
@@ -391,13 +376,67 @@ async function promptKookActions(params: {
       message: "Enable getGuildUserCount?",
       initialValue: existing.getGuildUserCount ?? true,
     }),
+    getGuildUsers: await prompter.confirm({
+      message: "Enable getGuildUsers?",
+      initialValue: existing.getGuildUsers ?? true,
+    }),
+
+    // Channel Queries
     getChannel: await prompter.confirm({
       message: "Enable getChannel?",
       initialValue: existing.getChannel ?? true,
     }),
+    getChannelList: await prompter.confirm({
+      message: "Enable getChannelList?",
+      initialValue: existing.getChannelList ?? true,
+    }),
     getChannelUserList: await prompter.confirm({
       message: "Enable getChannelUserList?",
       initialValue: existing.getChannelUserList ?? true,
+    }),
+
+    // Group toggles
+    guildInfo: await prompter.confirm({
+      message: "Enable guildInfo group?",
+      initialValue: existing.guildInfo ?? true,
+    }),
+    channelInfo: await prompter.confirm({
+      message: "Enable channelInfo group?",
+      initialValue: existing.channelInfo ?? true,
+    }),
+    roleInfo: await prompter.confirm({
+      message: "Enable roleInfo (read-only)?",
+      initialValue: existing.roleInfo ?? true,
+    }),
+    emojiList: await prompter.confirm({
+      message: "Enable emojiList (read-only)?",
+      initialValue: existing.emojiList ?? true,
+    }),
+
+    // Write operations (default enabled for role management)
+    roles: await prompter.confirm({
+      message: "Enable role write operations?",
+      initialValue: existing.roles ?? true,
+    }),
+    channels: await prompter.confirm({
+      message: "Enable channel write operations?",
+      initialValue: existing.channels ?? false,
+    }),
+    memberInfo: await prompter.confirm({
+      message: "Enable member info write operations?",
+      initialValue: existing.memberInfo ?? false,
+    }),
+    moderation: await prompter.confirm({
+      message: "Enable moderation operations?",
+      initialValue: existing.moderation ?? false,
+    }),
+    emojiUploads: await prompter.confirm({
+      message: "Enable emoji upload operations?",
+      initialValue: existing.emojiUploads ?? false,
+    }),
+    voiceStatus: await prompter.confirm({
+      message: "Enable voice status operations?",
+      initialValue: existing.voiceStatus ?? false,
     }),
   };
 
@@ -410,7 +449,7 @@ async function promptKookActions(params: {
         actions,
       },
     },
-  } as MoltbotConfig;
+  } as OpenClawConfig;
 }
 
 const dmPolicy: ChannelOnboardingDmPolicy = {
@@ -419,14 +458,14 @@ const dmPolicy: ChannelOnboardingDmPolicy = {
   policyKey: "channels.kook.dmPolicy",
   allowFromKey: "channels.kook.allowFrom",
   getCurrent: (cfg) => (cfg.channels?.kook?.dm?.policy ?? "pairing") as "pairing",
-  setPolicy: (cfg, policy) => setKookDmPolicy(cfg as MoltbotConfig, policy),
+  setPolicy: (cfg, policy) => setKookDmPolicy(cfg, policy),
   promptAllowFrom: async ({ cfg, prompter, accountId }) => {
     const id =
       accountId && normalizeAccountId(accountId)
         ? (normalizeAccountId(accountId) ?? DEFAULT_ACCOUNT_ID)
         : DEFAULT_ACCOUNT_ID;
     return promptKookAllowFrom({
-      cfg: cfg as MoltbotConfig,
+      cfg,
       prompter,
       accountId: id,
     });
@@ -437,8 +476,8 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
   channel,
   dmPolicy,
   getStatus: async ({ cfg }) => {
-    const configured = listKookAccountIds(cfg as MoltbotConfig).some((accountId) =>
-      Boolean(resolveKookAccount({ cfg: cfg as MoltbotConfig, accountId }).token),
+    const configured = listKookAccountIds(cfg).some((accountId) =>
+      Boolean(resolveKookAccount({ cfg, accountId }).token),
     );
     return {
       channel,
@@ -455,11 +494,114 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
     shouldPromptAccountIds,
     forceAllowFrom,
   }) => {
+    // ===== STEP 0: 权限确认（新增！）=====
+    await prompter.note(
+      [
+        "🤖 KOOK Bot 权限配置",
+        "",
+        "为了保护您的服务器安全，请确认权限配置方式：",
+        "",
+        "如果不配置，将使用以下默认权限：",
+        "  ✅ 发送消息、发送私信",
+        "  ✅ 获取用户信息、服务器信息、频道信息",
+        "  ❌ 创建/删除/修改角色、频道",
+        "  ❌ 踢出/禁言用户",
+        "  ❌ 其他管理操作",
+        "",
+        "💡 提示：可随时在配置文件中修改权限设置",
+      ].join("\n"),
+      "KOOK 权限配置",
+    );
+
+    const configurePermissions = await prompter.confirm({
+      message: "是否详细配置 KOOK Bot 权限？（推荐高级用户）",
+      initialValue: false,
+    });
+
+    // 初始化默认 actions 配置
+    let defaultActions: Record<string, boolean> = {};
+
+    if (!configurePermissions) {
+      // ===== 快速开始：默认只读配置 =====
+      defaultActions = {
+        // 基础消息（启用）
+        sendMessage: true,
+        sendDirectMessage: true,
+
+        // 用户查询（启用）
+        getMe: true,
+        getUser: true,
+
+        // 服务器查询（启用）
+        getGuildList: true,
+        getGuild: true,
+        getGuildUserCount: true,
+        getGuildUsers: true,
+
+        // 频道查询（启用）
+        getChannel: true,
+        getChannelList: true,
+        getChannelUserList: true,
+
+        // 角色查询（启用）
+        roleInfo: true,
+
+        // 表情查询（启用）
+        emojiList: true,
+
+        // 静音查询（启用）
+        muteList: true,
+
+        // ===== 以下操作默认启用/禁用 =====
+
+        // 角色管理（启用）
+        roleCreate: true,
+        roleUpdate: true,
+        roleDelete: true,
+        roleGrant: true,
+        roleRevoke: true,
+
+        // 频道管理（禁用）
+        createChannel: false,
+        updateChannel: false,
+        deleteChannel: false,
+        moveUser: false,
+
+        // 成员管理（禁用）
+        updateNickname: false,
+        kickUser: false,
+        leaveGuild: false,
+
+        // 表情管理（禁用）
+        emojiCreate: false,
+        emojiUpdate: false,
+        emojiDelete: false,
+
+        // 静音管理（禁用）
+        muteCreate: false,
+        muteDelete: false,
+      };
+    }
+
+    // 保存默认配置到 cfg
+    cfg = {
+      ...cfg,
+      channels: {
+        ...cfg.channels,
+        kook: {
+          ...cfg.channels?.kook,
+          groupPolicy: cfg.channels?.kook?.groupPolicy ?? "allowlist",
+          actions: defaultActions,
+        },
+      },
+    };
+
+    // ===== 继续原有流程 =====
     const kookOverride = accountOverrides.kook?.trim();
     let kookAccountId = kookOverride ? normalizeAccountId(kookOverride) : DEFAULT_ACCOUNT_ID;
     if (shouldPromptAccountIds && !kookOverride) {
       kookAccountId = await promptAccountId({
-        cfg: cfg as MoltbotConfig,
+        cfg,
         prompter,
         label: "KOOK",
         currentId: kookAccountId,
@@ -468,7 +610,7 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
       });
     }
 
-    let next = cfg as MoltbotConfig;
+    let next = cfg;
     const resolvedAccount = resolveKookAccount({ cfg: next, accountId: kookAccountId });
     const accountConfigured = Boolean(resolvedAccount.token);
     const allowEnv = kookAccountId === DEFAULT_ACCOUNT_ID;
@@ -496,7 +638,7 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
               enabled: true,
             },
           },
-        } as MoltbotConfig;
+        } as OpenClawConfig;
       } else {
         token = String(
           await prompter.text({
@@ -539,7 +681,7 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
               token,
             },
           },
-        } as MoltbotConfig;
+        } as OpenClawConfig;
       } else {
         next = {
           ...next,
@@ -558,7 +700,7 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
               },
             },
           },
-        } as MoltbotConfig;
+        } as OpenClawConfig;
       }
     }
 

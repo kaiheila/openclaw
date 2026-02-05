@@ -336,7 +336,9 @@ export async function handleKookGuildAction(
 
     case "roleCreate": {
       if (!isActionEnabled("roles")) {
-        throw new Error("KOOK role creation is disabled.");
+        throw new Error(
+          "KOOK role creation is disabled. Enable it by setting 'channels.kook.actions.roles: true' in your config.",
+        );
       }
       const guildId = readStringParam(params, "guildId", { required: true });
       const name = readStringParam(params, "name", { required: true });
@@ -356,7 +358,9 @@ export async function handleKookGuildAction(
 
     case "roleUpdate": {
       if (!isActionEnabled("roles")) {
-        throw new Error("KOOK role update is disabled.");
+        throw new Error(
+          "KOOK role update is disabled. Enable it by setting 'channels.kook.actions.roles: true' in your config.",
+        );
       }
       const guildId = readStringParam(params, "guildId", { required: true });
       const roleId = readNumberParam(params, "roleId", { required: true })!;
@@ -378,7 +382,9 @@ export async function handleKookGuildAction(
 
     case "roleDelete": {
       if (!isActionEnabled("roles")) {
-        throw new Error("KOOK role deletion is disabled.");
+        throw new Error(
+          "KOOK role deletion is disabled. Enable it by setting 'channels.kook.actions.roles: true' in your config.",
+        );
       }
       const guildId = readStringParam(params, "guildId", { required: true });
       const roleId = readNumberParam(params, "roleId", { required: true })!;
@@ -394,7 +400,9 @@ export async function handleKookGuildAction(
 
     case "roleGrant": {
       if (!isActionEnabled("roles")) {
-        throw new Error("KOOK role grant is disabled.");
+        throw new Error(
+          "KOOK role grant is disabled. Enable it by setting 'channels.kook.actions.roles: true' in your config.",
+        );
       }
       const guildId = readStringParam(params, "guildId", { required: true });
       const userId = readStringParam(params, "userId", { required: true });
@@ -412,7 +420,9 @@ export async function handleKookGuildAction(
 
     case "roleRevoke": {
       if (!isActionEnabled("roles")) {
-        throw new Error("KOOK role revoke is disabled.");
+        throw new Error(
+          "KOOK role revoke is disabled. Enable it by setting 'channels.kook.actions.roles: true' in your config.",
+        );
       }
       const guildId = readStringParam(params, "guildId", { required: true });
       const userId = readStringParam(params, "userId", { required: true });

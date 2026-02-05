@@ -1,10 +1,20 @@
 {
   "name": "kook-openclaw",
-  "version": "2026.2.1-kook.2",
+  "version": "2026.2.4-kook.2",
   "description": "OpenClaw with KOOK channel support",
-  "keywords": ["kook", "kaiheila", "bot", "gateway"],
+  "keywords": [
+    "kook",
+    "kaiheila",
+    "bot",
+    "gateway"
+  ],
   "license": "MIT",
   "author": "",
+  "openclaw": {
+    "extensions": [
+      "extensions/kook/index.ts"
+    ]
+  },
   "bin": {
     "kook-openclaw": "openclaw.mjs",
     "openclaw": "openclaw.mjs"
@@ -16,6 +26,7 @@
     "CHANGELOG.md",
     "LICENSE",
     "openclaw.mjs",
+    "openclaw.plugin.json",
     "README-header.png",
     "README.md",
     "assets/**",
@@ -85,6 +96,8 @@
     ".": "./dist/index.js",
     "./plugin-sdk": "./dist/plugin-sdk/index.js",
     "./plugin-sdk/*": "./dist/plugin-sdk/*",
+    "./kook": "./dist/kook/index.js",
+    "./kook/*": "./dist/kook/*.js",
     "./cli-entry": "./openclaw.mjs"
   },
   "scripts": {

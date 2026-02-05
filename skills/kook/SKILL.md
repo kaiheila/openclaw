@@ -1,7 +1,7 @@
 ---
 name: kook
-description: Use when you need to control KOOK from Moltbot via the kook tool: send messages, react, manage channels, roles, emojis, and moderation features in KOOK guilds and channels.
-metadata: {"moltbot":{"emoji":"🎮","requires":{"config":["channels.kook"]}}}
+description: Use when you need to control KOOK from Moltbot via the kook tool ,for example like these - send messages, react, manage channels, roles, emojis, and moderation features in KOOK guilds and channels.
+metadata: {"openclaw":{"emoji":"🎮","requires":{"config":["channels.kook"]}}}
 ---
 
 # KOOK Actions
