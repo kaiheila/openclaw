@@ -4,7 +4,7 @@ import { kookPlugin } from "./src/channel.js";
 import { setKookRuntime } from "./src/runtime.js";
 
 const plugin: OpenClawPlugin = {
-  id: "kook",
+  id: "kook-openclaw",
   name: "KOOK",
   description: "KOOK channel plugin",
   configSchema: emptyPluginConfigSchema(),
