@@ -380,6 +380,7 @@ export {
 } from "../kook/accounts.js";
 export { KookConfigSchema } from "../kook/config-schema.js";
 export type { KookConfigSchemaType, KookAccountConfigSchemaType } from "../kook/config-schema.js";
+export { kookOnboardingAdapter } from "../channels/plugins/onboarding/kook.js";
 
 // Media utilities
 export { loadWebMedia, type WebMediaResult } from "../web/media.js";
