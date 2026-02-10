@@ -587,6 +587,29 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
     });
     const locale: KookOnboardingLocale = useChinese ? "zh-CN" : "en";
 
+    await prompter.note(
+      [
+        tr(locale, "IMPORTANT DISCLAIMER", "重要免责声明"),
+        "",
+        tr(
+          locale,
+          "By continuing, you acknowledge that all bot permissions, allowlists, and action settings are configured and operated at your own risk.",
+          "继续配置即表示你确认：机器人权限、白名单和功能开关均由你自行配置并承担相关风险。",
+        ),
+        tr(
+          locale,
+          "You are solely responsible for any consequences caused by misconfiguration, including unauthorized use or destructive operations.",
+          "因配置不当导致的后果（包括未授权使用或破坏性操作，包括但不限于删除所在部署机器上的文件，自行修改配置文件造成权限异常等）由你自行负责。",
+        ),
+        tr(
+          locale,
+          "To the maximum extent permitted by law, KOOK platform software and related parties do not assume liability for losses arising from your bot configuration or usage.",
+          "在法律允许的最大范围内，KOOK 平台软件及其相关方不对你因机器人配置或使用导致的损失承担责任。",
+        ),
+      ].join("\n"),
+      tr(locale, "Legal Notice", "法律声明"),
+    );
+
     // ===== STEP 0: Permission confirmation =====
     await prompter.note(
       [
