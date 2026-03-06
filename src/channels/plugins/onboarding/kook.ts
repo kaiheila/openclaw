@@ -282,6 +282,29 @@ async function promptKookGuilds(params: {
     return cfg;
   }
 
+  await prompter.note(
+    [
+      tr(locale, "IMPORTANT SECURITY NOTICE", "重要安全提醒"),
+      "",
+      tr(
+        locale,
+        "If you do NOT set guild.users or channel.users, anyone in allowed channels can interact with your bot.",
+        "如果你没有配置 guild.users 或 channel.users，允许频道内的任何人都可以和机器人交互。",
+      ),
+      tr(
+        locale,
+        "This can be abused to run dangerous actions (including deleting files/data) via your bot.",
+        "这可能被恶意利用来执行危险操作（包括删除文件/数据）。",
+      ),
+      tr(
+        locale,
+        "Strongly recommended: configure explicit user allowlists for every guild/channel you expose.",
+        "强烈建议：对每个开放的服务器/频道配置明确的用户白名单。",
+      ),
+    ].join("\n"),
+    tr(locale, "Security Critical", "高危安全提示"),
+  );
+
   const newGuilds = { ...existingGuilds };
 
   while (true) {
@@ -564,6 +587,29 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
     });
     const locale: KookOnboardingLocale = useChinese ? "zh-CN" : "en";
 
+    await prompter.note(
+      [
+        tr(locale, "IMPORTANT DISCLAIMER", "重要免责声明"),
+        "",
+        tr(
+          locale,
+          "By continuing, you acknowledge that all bot permissions, allowlists, and action settings are configured and operated at your own risk.",
+          "继续配置即表示你确认：机器人权限、白名单和功能开关均由你自行配置并承担相关风险。",
+        ),
+        tr(
+          locale,
+          "You are solely responsible for any consequences caused by misconfiguration, including unauthorized use or destructive operations.",
+          "因配置不当导致的后果（包括未授权使用或破坏性操作，包括但不限于删除所在部署机器上的文件，自行修改配置文件造成权限异常等）由你自行负责。",
+        ),
+        tr(
+          locale,
+          "To the maximum extent permitted by law, KOOK platform software and related parties do not assume liability for losses arising from your bot configuration or usage.",
+          "在法律允许的最大范围内，KOOK 平台软件及其相关方不对你因机器人配置或使用导致的损失承担责任。",
+        ),
+      ].join("\n"),
+      tr(locale, "Legal Notice", "法律声明"),
+    );
+
     // ===== STEP 0: Permission confirmation =====
     await prompter.note(
       [
@@ -778,9 +824,19 @@ export const kookOnboardingAdapter: ChannelOnboardingAdapter = {
           "Without an allowlist, your bot will respond to EVERYONE's commands.",
           "如果不设置白名单，机器人会响应所有人的命令。",
         ),
+        tr(
+          locale,
+          "For server channels: if guild.users/channel.users are not configured, anyone in allowed channels can interact with OpenClaw.",
+          "对于服务器频道：如果未配置 guild.users/channel.users，允许频道中的任何人都能和 OpenClaw 交互。",
+        ),
         tr(locale, "This poses serious risks including:", "这会带来严重风险，包括："),
         tr(locale, "  - Unauthorized access to your system", "  - 未授权访问你的系统"),
         tr(locale, "  - Potential file deletion or data loss", "  - 可能发生文件删除或数据丢失"),
+        tr(
+          locale,
+          "  - Malicious abuse by unauthorized channel members",
+          "  - 被未授权频道成员恶意滥用",
+        ),
         tr(locale, "  - Abuse of bot capabilities", "  - 机器人能力被滥用"),
         "",
         tr(
